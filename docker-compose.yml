@@ -1,0 +1,38 @@
+
+version: "3.8"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-mortuser}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-mortpass}"
+      POSTGRES_DB: "${POSTGRES_DB:-mortdb}"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./api
+    environment:
+      DATABASE_URL: "${DATABASE_URL}"
+      API_TOKEN: "${API_TOKEN:-supersecret}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api/app:/app/app
+    depends_on:
+      - db
+
+  streamlit:
+    build:
+      context: ./frontend
+    environment:
+      API_URL: "http://api:8000"
+      API_TOKEN: "${API_TOKEN:-supersecret}"
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
